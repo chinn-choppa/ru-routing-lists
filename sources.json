@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "name": "v2fly-ru-domain-suffixes",
+      "kind": "domain_suffix",
+      "output": "ru-domain-suffixes.txt",
+      "url": "https://raw.githubusercontent.com/v2fly/domain-list-community/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/data/tld-ru",
+      "revision": "5d939545c84e2a534f8e85ba6ffb2b51fa18fb76",
+      "git_blob_sha": "b2fb3fc8be62619f32f746cdda5bb32e18175324",
+      "source_timestamp": "2026-09-08T09:39:45Z",
+      "roles": [
+        "primary"
+      ],
+      "license": {
+        "spdx": "MIT",
+        "source_url": "https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/LICENSE"
+      },
+      "redistribution": {
+        "allowed": true,
+        "attribution": "v2fly/domain-list-community"
+      },
+      "provenance": {
+        "depends_on": []
+      }
+    },
+    {
+      "name": "ipverse-ru-ipv4-cidrs",
+      "kind": "cidr",
+      "output": "ru-ipv4-cidrs.txt",
+      "url": "https://raw.githubusercontent.com/ipverse/country-ip-blocks/8a47796717f3eca8da93e7c0b2f3be0235fbc4b9/country/ru/ipv4-aggregated.txt",
+      "revision": "8a47796717f3eca8da93e7c0b2f3be0235fbc4b9",
+      "git_blob_sha": "ce186add88641acc91997e8b4f902dabc6ec0bff",
+      "source_timestamp": "2026-09-08T01:52:45Z",
+      "roles": [
+        "primary"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "source_url": "https://github.com/ipverse/country-ip-blocks/blob/8a47796717f3eca8da93e7c0b2f3be0235fbc4b9/LICENSE"
+      },
+      "redistribution": {
+        "allowed": true,
+        "attribution": "ipverse/country-ip-blocks"
+      },
+      "provenance": {
+        "depends_on": [
+          "RIR delegated statistics"
+        ]
+      }
+    }
+  ]
+}
