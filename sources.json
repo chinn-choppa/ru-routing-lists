@@ -25,26 +25,28 @@
       }
     },
     {
-      "name": "loyalsoldier-ru-cidrs",
+      "name": "ipverse-ru-ipv4-cidrs",
       "kind": "cidr",
-      "output": "ru-cidrs.txt",
-      "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/84e9413fb661ff893ab898e934cfcb6f42ad52a0/text/ru.txt",
-      "revision": "84e9413fb661ff893ab898e934cfcb6f42ad52a0",
-      "git_blob_sha": "a5a8e2c5c613261f564e53012136753809b2f568",
-      "source_timestamp": "2026-09-04T06:56:11Z",
+      "output": "ru-ipv4-cidrs.txt",
+      "url": "https://raw.githubusercontent.com/ipverse/country-ip-blocks/8a47796717f3eca8da93e7c0b2f3be0235fbc4b9/country/ru/ipv4-aggregated.txt",
+      "revision": "8a47796717f3eca8da93e7c0b2f3be0235fbc4b9",
+      "git_blob_sha": "ce186add88641acc91997e8b4f902dabc6ec0bff",
+      "source_timestamp": "2026-09-08T01:52:45Z",
       "roles": [
         "primary"
       ],
       "license": {
-        "spdx": "CC-BY-SA-4.0",
-        "source_url": "https://github.com/Loyalsoldier/geoip/blob/1503074d8aee4c623791210e90c04d586c86c8f7/LICENSE"
+        "spdx": "CC0-1.0",
+        "source_url": "https://github.com/ipverse/country-ip-blocks/blob/8a47796717f3eca8da93e7c0b2f3be0235fbc4b9/LICENSE"
       },
       "redistribution": {
         "allowed": true,
-        "attribution": "Loyalsoldier/geoip"
+        "attribution": "ipverse/country-ip-blocks"
       },
       "provenance": {
-        "depends_on": []
+        "depends_on": [
+          "RIR delegated statistics"
+        ]
       }
     }
   ]
