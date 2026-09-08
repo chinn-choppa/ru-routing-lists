@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "name": "v2fly-ru-domain-suffixes",
+      "kind": "domain_suffix",
+      "output": "ru-domain-suffixes.txt",
+      "url": "https://raw.githubusercontent.com/v2fly/domain-list-community/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/data/tld-ru",
+      "revision": "5d939545c84e2a534f8e85ba6ffb2b51fa18fb76",
+      "git_blob_sha": "b2fb3fc8be62619f32f746cdda5bb32e18175324",
+      "source_timestamp": "2026-09-08T09:39:45Z",
+      "roles": [
+        "primary"
+      ],
+      "license": {
+        "spdx": "MIT",
+        "source_url": "https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/LICENSE"
+      },
+      "redistribution": {
+        "allowed": true,
+        "attribution": "v2fly/domain-list-community"
+      },
+      "provenance": {
+        "depends_on": []
+      }
+    },
+    {
+      "name": "loyalsoldier-ru-cidrs",
+      "kind": "cidr",
+      "output": "ru-cidrs.txt",
+      "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/84e9413fb661ff893ab898e934cfcb6f42ad52a0/text/ru.txt",
+      "revision": "84e9413fb661ff893ab898e934cfcb6f42ad52a0",
+      "git_blob_sha": "a5a8e2c5c613261f564e53012136753809b2f568",
+      "source_timestamp": "2026-09-04T06:56:11Z",
+      "roles": [
+        "primary"
+      ],
+      "license": {
+        "spdx": "CC-BY-SA-4.0",
+        "source_url": "https://github.com/Loyalsoldier/geoip/blob/master/LICENSE"
+      },
+      "redistribution": {
+        "allowed": true,
+        "attribution": "Loyalsoldier/geoip"
+      },
+      "provenance": {
+        "depends_on": []
+      }
+    }
+  ]
+}
