@@ -9,9 +9,11 @@
 Первая версия строит два нейтральных набора из immutable upstream revisions:
 
 - `ru-domain-suffixes.txt` — российские доменные суффиксы/TLD из `v2fly/domain-list-community`;
-- `ru-cidrs.txt` — RU CIDR-набор из `Loyalsoldier/geoip`.
+- `ru-ipv4-cidrs.txt` — агрегированные RU IPv4 prefixes из `ipverse/country-ip-blocks`.
 
 Оба upstream pin-ятся на точные commit SHA и Git blob SHA. Builder проверяет fetched bytes, нормализует, дедуплицирует и детерминированно сортирует данные, затем создаёт `manifest.json` и `SHA256SUMS`.
+
+Первый CIDR source намеренно выбран с простым redistribution contract: `ipverse/country-ip-blocks` публикует country-prefix data под CC0 1.0. GeoLite2-derived datasets пока не ship-ятся, потому что их EULA/retention obligations требуют отдельного моделирования перед immutable historical releases.
 
 ## Лицензирование данных
 
