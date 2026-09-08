@@ -10,7 +10,7 @@
 - pinned revision: `5d939545c84e2a534f8e85ba6ffb2b51fa18fb76`;
 - pinned Git blob: `b2fb3fc8be62619f32f746cdda5bb32e18175324`;
 - source URL: <https://github.com/v2fly/domain-list-community>;
-- license URL: <https://github.com/v2fly/domain-list-community/blob/master/LICENSE>.
+- pinned license URL: <https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/LICENSE>.
 
 Artifact является нормализованным/отсортированным представлением соответствующего source file и распространяется на условиях MIT с сохранением attribution upstream.
 
@@ -19,12 +19,13 @@ Artifact является нормализованным/отсортирова�
 Источник: `Loyalsoldier/geoip`, release-файл `text/ru.txt`.
 
 - upstream license: CC BY-SA 4.0;
-- pinned revision: `84e9413fb661ff893ab898e934cfcb6f42ad52a0`;
+- pinned data revision: `84e9413fb661ff893ab898e934cfcb6f42ad52a0`;
 - pinned Git blob: `a5a8e2c5c613261f564e53012136753809b2f568`;
 - source URL: <https://github.com/Loyalsoldier/geoip>;
-- license URL: <https://github.com/Loyalsoldier/geoip/blob/master/LICENSE>.
+- pinned license reference from repository `master`: `1503074d8aee4c623791210e90c04d586c86c8f7`;
+- pinned license URL: <https://github.com/Loyalsoldier/geoip/blob/1503074d8aee4c623791210e90c04d586c86c8f7/LICENSE>.
 
-Artifact нормализует порядок и удаляет дубликаты. Он распространяется как адаптированное представление исходного dataset на условиях CC BY-SA 4.0 с attribution upstream.
+Release data commit является orphan-style generated snapshot и не содержит `LICENSE` в собственном tree, поэтому license reference фиксируется отдельным immutable commit из канонической ветки repository. Artifact нормализует порядок и удаляет дубликаты и распространяется как адаптированное представление исходного dataset на условиях CC BY-SA 4.0 с attribution upstream.
 
 ## Правило fail-closed
 
