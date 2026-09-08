@@ -9,12 +9,19 @@
       "revision": "5d939545c84e2a534f8e85ba6ffb2b51fa18fb76",
       "git_blob_sha": "b2fb3fc8be62619f32f746cdda5bb32e18175324",
       "source_timestamp": "2026-09-08T09:39:45Z",
+      "tracking": {
+        "repository": "v2fly/domain-list-community",
+        "ref": "master",
+        "path": "data/tld-ru",
+        "license_path": "LICENSE"
+      },
       "roles": [
         "primary"
       ],
       "license": {
         "spdx": "MIT",
-        "source_url": "https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/LICENSE"
+        "source_url": "https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/LICENSE",
+        "approved_git_blob_sha": "1f086538ba3a1d26f46ec44cfda12c2a0c4753a6"
       },
       "redistribution": {
         "allowed": true,
@@ -32,12 +39,19 @@
       "revision": "8a47796717f3eca8da93e7c0b2f3be0235fbc4b9",
       "git_blob_sha": "ce186add88641acc91997e8b4f902dabc6ec0bff",
       "source_timestamp": "2026-09-08T01:52:45Z",
+      "tracking": {
+        "repository": "ipverse/country-ip-blocks",
+        "ref": "master",
+        "path": "country/ru/ipv4-aggregated.txt",
+        "license_path": "LICENSE"
+      },
       "roles": [
         "primary"
       ],
       "license": {
         "spdx": "CC0-1.0",
-        "source_url": "https://github.com/ipverse/country-ip-blocks/blob/8a47796717f3eca8da93e7c0b2f3be0235fbc4b9/LICENSE"
+        "source_url": "https://github.com/ipverse/country-ip-blocks/blob/8a47796717f3eca8da93e7c0b2f3be0235fbc4b9/LICENSE",
+        "approved_git_blob_sha": "0e259d42c996742e9e3cba14c677129b2c1b6311"
       },
       "redistribution": {
         "allowed": true,

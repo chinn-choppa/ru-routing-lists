@@ -189,9 +189,11 @@ def build(
                 {
                     "name": source["name"],
                     "kind": source["kind"],
+                    "url": source["url"],
                     "revision": source["revision"],
                     "git_blob_sha": source["git_blob_sha"],
                     "source_timestamp": source.get("source_timestamp"),
+                    "tracking": source.get("tracking"),
                     "roles": source.get("roles", []),
                     "license": source["license"],
                     "redistribution": source["redistribution"],
