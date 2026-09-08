@@ -13,6 +13,8 @@
 
 Оба upstream pin-ятся на точные commit SHA и Git blob SHA. Builder проверяет fetched bytes, нормализует, дедуплицирует и детерминированно сортирует данные, затем создаёт `manifest.json` и `SHA256SUMS`.
 
+`ru-ipv4-cidrs.txt` отражает **официальную делегацию адресных ресурсов по стране**, а не гарантированное фактическое местоположение маршрута/сервера. Для operational geolocation нужен отдельный dataset и отдельный quality contract.
+
 Первый CIDR source намеренно выбран с простым redistribution contract: `ipverse/country-ip-blocks` публикует country-prefix data под CC0 1.0. GeoLite2-derived datasets пока не ship-ятся, потому что их EULA/retention obligations требуют отдельного моделирования перед immutable historical releases.
 
 ## Лицензирование данных
