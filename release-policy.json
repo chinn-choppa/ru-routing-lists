@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "artifacts": {
+    "ru-domain-suffixes.txt": {
+      "min_entries": 2,
+      "max_entries": 100,
+      "max_entry_change_fraction": 0.5,
+      "max_byte_change_fraction": 0.5
+    },
+    "ru-ipv4-cidrs.txt": {
+      "min_entries": 7000,
+      "max_entries": 20000,
+      "max_entry_change_fraction": 0.2,
+      "max_byte_change_fraction": 0.25
+    }
+  },
+  "sources": {
+    "v2fly-ru-domain-suffixes": {
+      "max_age_hours": null
+    },
+    "ipverse-ru-ipv4-cidrs": {
+      "max_age_hours": 72
+    }
+  }
+}

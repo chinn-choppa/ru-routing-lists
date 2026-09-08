@@ -6,16 +6,27 @@
 
 ## Первый vertical slice
 
-Первая версия строит два нейтральных набора из immutable upstream revisions:
+Первая версия строит два нейтральных набора:
 
 - `ru-domain-suffixes.txt` — российские доменные суффиксы/TLD из `v2fly/domain-list-community`;
 - `ru-ipv4-cidrs.txt` — агрегированные RU IPv4 prefixes из `ipverse/country-ip-blocks`.
 
-Оба upstream pin-ятся на точные commit SHA и Git blob SHA. Builder проверяет fetched bytes, нормализует, дедуплицирует и детерминированно сортирует данные, затем создаёт `manifest.json` и `SHA256SUMS`.
-
 `ru-ipv4-cidrs.txt` отражает **официальную делегацию адресных ресурсов по стране**, а не гарантированное фактическое местоположение маршрута/сервера. Для operational geolocation нужен отдельный dataset и отдельный quality contract.
 
 Первый CIDR source намеренно выбран с простым redistribution contract: `ipverse/country-ip-blocks` публикует country-prefix data под CC0 1.0. GeoLite2-derived datasets пока не ship-ятся, потому что их EULA/retention obligations требуют отдельного моделирования перед immutable historical releases.
+
+## Source tracking и воспроизводимость
+
+`sources.json` содержит review-approved source contract: repository/ref/path, license metadata и approved license Git blob SHA. Scheduled build сначала resolves mutable upstream ref в:
+
+- exact commit SHA;
+- exact source Git blob SHA;
+- exact license Git blob SHA;
+- immutable raw URL.
+
+Если upstream license blob изменился, автоматический release блокируется до нового review. Builder затем повторно проверяет fetched bytes по Git blob SHA.
+
+Сам release `manifest.json` хранит exact revisions/blobs/source URLs, поэтому опубликованный artifact остаётся воспроизводимым даже при дальнейших изменениях upstream branch.
 
 ## Лицензирование данных
 
@@ -23,23 +34,45 @@
 
 Источник с `redistribution.allowed != true` не может попасть в публикуемый artifact.
 
-## Сборка
+## Локальная сборка
+
+Сборка из уже pinned `sources.json`:
 
 ```bash
 python src/build.py --sources sources.json --output dist
 python -m unittest discover -s tests -v
 ```
 
-Network access нужен только на fetch-stage. Тесты используют локальные fixtures и не зависят от сети.
+Проверка актуальных tracked revisions перед candidate build:
 
-`manifest.json` намеренно не содержит wall-clock build timestamp: одинаковые pinned inputs должны давать байт-в-байт одинаковый output. Время конкретного запуска/релиза остаётся metadata CI/GitHub Release, а freshness входов хранится как immutable upstream revision + source timestamp.
+```bash
+python -m src.refresh_sources --sources sources.json --output resolved-sources.json
+python src/build.py --sources resolved-sources.json --output dist
+```
 
-## GitHub Actions
+`manifest.json` намеренно не содержит wall-clock build timestamp: одинаковые resolved inputs дают байт-в-байт одинаковый output. Время конкретного CI run/release остаётся metadata GitHub Actions/GitHub Release.
 
-Workflow выполняется на pull request, `main`, вручную и по расписанию. Он имеет только `contents: read`, запускает unit/reproducibility tests, строит `dist/` и загружает его как CI artifact.
+## GitHub Actions и Releases
 
-Автоматическая публикация GitHub Release пока намеренно не включена: это write-capable workflow и требует отдельного security review перед выдачей `contents: write`.
+Workflow выполняется на pull request, `main`, вручную и по расписанию каждые 6 часов.
+
+Build job имеет только `contents: read` и выполняет:
+
+1. tests;
+2. upstream resolution + license-blob gate;
+3. deterministic build;
+4. checksum verification;
+5. comparison с latest published `manifest.json`;
+6. freshness/size/change guards из `release-policy.json`.
+
+Если artifact SHA-256 не изменились, новый release не создаётся.
+
+Отдельный release job получает `contents: write` **только на `main` и не на pull request**. Он повторно проверяет latest release, создаёт draft, скачивает assets обратно, проверяет точный набор файлов и `SHA256SUMS`, и только после этого публикует release.
+
+Security review этого write boundary: `docs/release-security-review.md`.
 
 ## Безопасность и границы
 
-В репозиторий запрещено добавлять secrets, private infrastructure, клиентские UUID/subscription paths, private VPN endpoints и любые другие данные конкретного оператора. Здесь также не должно быть автоматического production rollout в сторонние системы.
+В репозиторий запрещено добавлять secrets, private infrastructure, клиентские UUID/subscription paths, private VPN endpoints и любые другие данные конкретного оператора. Здесь также нет automatic production rollout в сторонние системы.
+
+Default branch должна быть защищена от direct/force pushes перед включением write-scoped release automation; рекомендуемая конфигурация описана в security review.
