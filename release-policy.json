@@ -12,6 +12,18 @@
       "max_entries": 20000,
       "max_entry_change_fraction": 0.2,
       "max_byte_change_fraction": 0.25
+    },
+    "whitelist-candidate-gov.txt": {
+      "min_entries": 10,
+      "max_entries": 60,
+      "max_entry_change_fraction": 0.35,
+      "max_byte_change_fraction": 0.45
+    },
+    "whitelist-candidate-finance.txt": {
+      "min_entries": 20,
+      "max_entries": 100,
+      "max_entry_change_fraction": 0.35,
+      "max_byte_change_fraction": 0.45
     }
   },
   "sources": {
@@ -20,6 +32,16 @@
     },
     "ipverse-ru-ipv4-cidrs": {
       "max_age_hours": 72
+    },
+    "vahellame-whitelist-gov": {
+      "max_age_hours": null
+    },
+    "vahellame-whitelist-finance": {
+      "max_age_hours": null
     }
-  }
+  },
+  "allowed_new_artifacts": [
+    "whitelist-candidate-finance.txt",
+    "whitelist-candidate-gov.txt"
+  ]
 }

@@ -162,8 +162,7 @@ jobs:
           RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
         run: |
           gh release create "$RELEASE_TAG" \
-            candidate/dist/ru-domain-suffixes.txt \
-            candidate/dist/ru-ipv4-cidrs.txt \
+            candidate/dist/*.txt \
             candidate/dist/manifest.json \
             candidate/dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
@@ -182,11 +181,11 @@ jobs:
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir release-verify
           python - <<'PY'
           from pathlib import Path
-          expected = {
-              "SHA256SUMS",
-              "manifest.json",
-              "ru-domain-suffixes.txt",
-              "ru-ipv4-cidrs.txt",
+          import json
+          with open("candidate/dist/manifest.json", encoding="utf-8") as handle:
+              manifest = json.load(handle)
+          expected = {"SHA256SUMS", "manifest.json"} | {
+              entry["path"] for entry in manifest["artifacts"]
           }
           actual = {path.name for path in Path("release-verify").iterdir() if path.is_file()}
           if actual != expected:

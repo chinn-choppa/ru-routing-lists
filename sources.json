@@ -62,6 +62,78 @@
           "RIR delegated statistics"
         ]
       }
+    },
+    {
+      "name": "vahellame-whitelist-gov",
+      "kind": "domain_rule",
+      "output": "whitelist-candidate-gov.txt",
+      "url": "https://raw.githubusercontent.com/vahellame/russia-whitelist-geosite/c31a360b788ccbec98ee7712b408d938d1b5124a/data/category-gov",
+      "revision": "c31a360b788ccbec98ee7712b408d938d1b5124a",
+      "git_blob_sha": "8cc1436ab303c4009414192701f337b7a7dad5c7",
+      "source_timestamp": "2026-08-27T07:47:38Z",
+      "tracking": {
+        "repository": "vahellame/russia-whitelist-geosite",
+        "ref": "main",
+        "path": "data/category-gov",
+        "license_path": "LICENSE"
+      },
+      "roles": [
+        "primary"
+      ],
+      "license": {
+        "spdx": "MIT",
+        "source_url": "https://github.com/vahellame/russia-whitelist-geosite/blob/c31a360b788ccbec98ee7712b408d938d1b5124a/LICENSE",
+        "approved_git_blob_sha": "38ee4420e0f9c362fd8a1761c2b0b81eb3775883"
+      },
+      "redistribution": {
+        "allowed": true,
+        "attribution": "vahellame/russia-whitelist-geosite; Copyright (c) 2026 vahellame"
+      },
+      "provenance": {
+        "depends_on": [
+          "vahellame curated domain categories"
+        ]
+      },
+      "verification": {
+        "operator_access": "unverified",
+        "basis": "upstream curation; no independent Flexus mobile PASS"
+      }
+    },
+    {
+      "name": "vahellame-whitelist-finance",
+      "kind": "domain_rule",
+      "output": "whitelist-candidate-finance.txt",
+      "url": "https://raw.githubusercontent.com/vahellame/russia-whitelist-geosite/e212a336d451756831979e4b9b60840aa69c265b/data/category-finance",
+      "revision": "e212a336d451756831979e4b9b60840aa69c265b",
+      "git_blob_sha": "7df4b16e2e7827c74c0a0037bfe5d9f6a7b22386",
+      "source_timestamp": "2026-08-27T15:41:29Z",
+      "tracking": {
+        "repository": "vahellame/russia-whitelist-geosite",
+        "ref": "main",
+        "path": "data/category-finance",
+        "license_path": "LICENSE"
+      },
+      "roles": [
+        "primary"
+      ],
+      "license": {
+        "spdx": "MIT",
+        "source_url": "https://github.com/vahellame/russia-whitelist-geosite/blob/e212a336d451756831979e4b9b60840aa69c265b/LICENSE",
+        "approved_git_blob_sha": "38ee4420e0f9c362fd8a1761c2b0b81eb3775883"
+      },
+      "redistribution": {
+        "allowed": true,
+        "attribution": "vahellame/russia-whitelist-geosite; Copyright (c) 2026 vahellame"
+      },
+      "provenance": {
+        "depends_on": [
+          "vahellame curated domain categories"
+        ]
+      },
+      "verification": {
+        "operator_access": "unverified",
+        "basis": "upstream curation; no independent Flexus mobile PASS"
+      }
     }
   ]
 }

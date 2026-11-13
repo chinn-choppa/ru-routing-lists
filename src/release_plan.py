@@ -123,11 +123,19 @@ def create_plan(
         reason = "initial_release"
     else:
         previous_artifacts = _index(previous.get("artifacts"), "path", "previous artifacts")
-        if set(previous_artifacts) != set(candidate_artifacts):
-            raise ReleasePlanError("automatic release is blocked when artifact set changes")
+        removed = set(previous_artifacts) - set(candidate_artifacts)
+        added = set(candidate_artifacts) - set(previous_artifacts)
+        approved = policy.get("allowed_new_artifacts", [])
+        if not isinstance(approved, list) or any(not isinstance(x, str) for x in approved):
+            raise ReleasePlanError("allowed_new_artifacts must be a list of paths")
+        if removed or added - set(approved):
+            raise ReleasePlanError("automatic release is blocked for unapproved artifact set changes")
 
         changed = []
         for path, artifact in candidate_artifacts.items():
+            if path in added:
+                changed.append(path)
+                continue
             old = previous_artifacts[path]
             if artifact.get("sha256") == old.get("sha256"):
                 continue

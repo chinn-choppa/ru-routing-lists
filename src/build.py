@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 REVISION_RE = re.compile(r"^[0-9a-f]{40}$")
-ALLOWED_KINDS = {"domain_suffix", "cidr"}
+ALLOWED_KINDS = {"domain_suffix", "cidr", "domain_rule"}
 
 
 class BuildError(RuntimeError):
@@ -78,6 +78,11 @@ def validate_sources_manifest(manifest: dict) -> None:
         kind = source.get("kind")
         if kind not in ALLOWED_KINDS:
             raise BuildError(f"{name}: unsupported kind {kind!r}")
+
+        if kind == "domain_rule":
+            verification = source.get("verification")
+            if not isinstance(verification, dict) or verification.get("operator_access") != "unverified":
+                raise BuildError(f"{name}: domain_rule requires unverified operator access")
 
         license_info = source.get("license")
         if not isinstance(license_info, dict) or not license_info.get("spdx") or not license_info.get("source_url"):
@@ -157,11 +162,52 @@ def normalize_cidrs(text: str) -> list[str]:
     return [networks[key] for key in sorted(networks)]
 
 
+def normalize_domain_rules(text: str) -> list[str]:
+    """Preserve full:/domain: matching and strip upstream @provider annotations."""
+    rules: set[str] = set()
+    for line_number, raw in enumerate(text.splitlines(), start=1):
+        line = _strip_line(raw)
+        if not line:
+            continue
+        parts = line.split()
+        if any(not re.fullmatch(r"@[a-zA-Z0-9_-]+", item) for item in parts[1:]):
+            raise BuildError(f"invalid domain rule annotation at line {line_number}")
+        match = re.fullmatch(r"(full|domain):(.+)", parts[0])
+        if match is None:
+            raise BuildError(f"unsupported domain rule at line {line_number}: {parts[0]!r}")
+        domain = normalize_domain_suffixes(match.group(2))[0]
+        rules.add(f"{match.group(1)}:{domain}")
+    if not rules:
+        raise BuildError("domain rules source produced an empty dataset")
+    suffixes = {rule[7:] for rule in rules if rule.startswith("domain:")}
+    return sorted(
+        rule for rule in rules
+        if not (
+            rule.startswith("full:")
+            and any(rule[5:] == suffix or rule[5:].endswith("." + suffix) for suffix in suffixes)
+        )
+    )
+
+
+def domain_rules_overlap(left: str, right: str) -> bool:
+    left_kind, left_domain = left.split(":", 1)
+    right_kind, right_domain = right.split(":", 1)
+    if left_kind == right_kind == "full":
+        return left_domain == right_domain
+    if left_kind == "domain" and (right_domain == left_domain or right_domain.endswith("." + left_domain)):
+        return True
+    if right_kind == "domain" and (left_domain == right_domain or left_domain.endswith("." + right_domain)):
+        return True
+    return False
+
+
 def normalize(kind: str, text: str) -> list[str]:
     if kind == "domain_suffix":
         return normalize_domain_suffixes(text)
     if kind == "cidr":
         return normalize_cidrs(text)
+    if kind == "domain_rule":
+        return normalize_domain_rules(text)
     raise BuildError(f"unsupported kind: {kind}")
 
 
@@ -182,6 +228,7 @@ def build(
     try:
         artifacts: list[dict] = []
         rendered_sources: list[dict] = []
+        domain_rule_sets: dict[str, list[str]] = {}
 
         for source in sources_manifest["sources"]:
             publish = source.get("publish", True)
@@ -198,6 +245,7 @@ def build(
                     "license": source["license"],
                     "redistribution": source["redistribution"],
                     "provenance": source.get("provenance", {"depends_on": []}),
+                    "verification": source.get("verification"),
                     "publish": publish,
                 }
             )
@@ -217,6 +265,8 @@ def build(
                 raise BuildError(f"{source['name']}: input is not UTF-8") from exc
 
             values = normalize(source["kind"], text)
+            if source["kind"] == "domain_rule":
+                domain_rule_sets[source["output"]] = values
             payload = encoded_lines(values)
             artifact_path = temp_dir / source["output"]
             artifact_path.write_bytes(payload)
@@ -231,6 +281,13 @@ def build(
                     "license": source["license"]["spdx"],
                 }
             )
+
+        # Cross-category overlap can silently create ambiguous downstream routing.
+        rule_sets = sorted(domain_rule_sets.items())
+        for index, (left_path, left_rules) in enumerate(rule_sets):
+            for right_path, right_rules in rule_sets[index + 1:]:
+                if any(domain_rules_overlap(a, b) for a in left_rules for b in right_rules):
+                    raise BuildError(f"overlapping domain rules: {left_path} / {right_path}")
 
         artifacts.sort(key=lambda item: item["path"])
         rendered_sources.sort(key=lambda item: item["name"])
