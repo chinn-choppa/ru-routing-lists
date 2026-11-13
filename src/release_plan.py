@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -123,11 +124,19 @@ def create_plan(
         reason = "initial_release"
     else:
         previous_artifacts = _index(previous.get("artifacts"), "path", "previous artifacts")
-        if set(previous_artifacts) != set(candidate_artifacts):
-            raise ReleasePlanError("automatic release is blocked when artifact set changes")
+        removed = set(previous_artifacts) - set(candidate_artifacts)
+        added = set(candidate_artifacts) - set(previous_artifacts)
+        approved = policy.get("allowed_new_artifacts", [])
+        if not isinstance(approved, list) or any(not isinstance(x, str) for x in approved):
+            raise ReleasePlanError("allowed_new_artifacts must be a list of paths")
+        if removed or added - set(approved):
+            raise ReleasePlanError("automatic release is blocked for unapproved artifact set changes")
 
         changed = []
         for path, artifact in candidate_artifacts.items():
+            if path in added:
+                changed.append(path)
+                continue
             old = previous_artifacts[path]
             if artifact.get("sha256") == old.get("sha256"):
                 continue
@@ -186,11 +195,56 @@ def create_plan(
     }
 
 
+def check_semantic_churn(
+    candidate: dict,
+    previous: dict,
+    policy: dict,
+    candidate_dir: Path,
+    previous_dir: Path,
+) -> None:
+    """Reject same-size large data rewrites, not merely count/byte changes."""
+    candidate_artifacts = _index(candidate.get("artifacts"), "path", "artifacts")
+    previous_artifacts = _index(previous.get("artifacts"), "path", "previous artifacts")
+    for path in sorted(set(candidate_artifacts) & set(previous_artifacts)):
+        rules = policy["artifacts"][path]
+        limit = rules.get("max_rule_churn_fraction")
+        if not isinstance(limit, (int, float)) or not 0 <= limit <= 1:
+            raise ReleasePlanError(f"{path}: max_rule_churn_fraction must be in [0,1]")
+
+        sets: list[set[str]] = []
+        for directory, artifact in (
+            (previous_dir, previous_artifacts[path]),
+            (candidate_dir, candidate_artifacts[path]),
+        ):
+            file_path = directory / path
+            if file_path.name != path or not file_path.is_file():
+                raise ReleasePlanError(f"{path}: missing or unsafe text artifact")
+            payload = file_path.read_bytes()
+            if hashlib.sha256(payload).hexdigest() != artifact.get("sha256"):
+                raise ReleasePlanError(f"{path}: artifact bytes disagree with manifest SHA-256")
+            try:
+                values = payload.decode("utf-8").splitlines()
+            except UnicodeDecodeError as exc:
+                raise ReleasePlanError(f"{path}: text artifact is not UTF-8") from exc
+            if not values or len(values) != artifact.get("entries") or len(values) != len(set(values)):
+                raise ReleasePlanError(f"{path}: invalid or duplicated artifact entries")
+            sets.append(set(values))
+
+        old, new = sets
+        fraction = len(old ^ new) / len(old)
+        if fraction > limit:
+            raise ReleasePlanError(
+                f"{path}: rule churn {fraction:.1%} exceeds approved {float(limit):.1%}"
+            )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--candidate", type=Path, required=True)
     parser.add_argument("--policy", type=Path, default=Path("release-policy.json"))
     parser.add_argument("--previous", type=Path)
+    parser.add_argument("--candidate-dir", type=Path)
+    parser.add_argument("--previous-dir", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
 
@@ -201,6 +255,10 @@ def main() -> int:
     policy = _load_json(args.policy)
     previous = _load_json(args.previous) if args.previous and args.previous.exists() else None
     plan = create_plan(candidate, policy, previous)
+    if previous is not None:
+        if args.candidate_dir is None or args.previous_dir is None:
+            raise ReleasePlanError("previous release requires both artifact directories for churn check")
+        check_semantic_churn(candidate, previous, policy, args.candidate_dir, args.previous_dir)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(plan, ensure_ascii=False, indent=2, sort_keys=True) + "\n",

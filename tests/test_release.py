@@ -1,4 +1,7 @@
 from datetime import datetime, timezone
+from pathlib import Path
+import hashlib
+import tempfile
 import unittest
 
 from src import build as builder
@@ -239,11 +242,63 @@ class ReleasePlanTests(unittest.TestCase):
         plan = release_plan.create_plan(candidate, self.make_policy(), now=self.NOW)
         self.assertTrue(plan["release_needed"])
 
+    def test_same_size_high_churn_is_blocked(self):
+        previous = self.make_manifest(domain_entries=2)
+        candidate = self.make_manifest(domain_entries=2)
+        policy = self.make_policy()
+        policy["artifacts"]["domains.txt"]["max_rule_churn_fraction"] = 0.25
+        policy["artifacts"]["cidrs.txt"]["max_rule_churn_fraction"] = 0.25
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            before = root / "previous"
+            after = root / "candidate"
+            before.mkdir()
+            after.mkdir()
+            for name, old, new in [
+                ("domains.txt", b"a.ru\nb.ru\n", b"c.ru\nd.ru\n"),
+                ("cidrs.txt", b"192.0.2.0/24\n", b"192.0.2.0/24\n"),
+            ]:
+                (before / name).write_bytes(old)
+                (after / name).write_bytes(new)
+                for manifest, payload in ((previous, old), (candidate, new)):
+                    item = next(a for a in manifest["artifacts"] if a["path"] == name)
+                    item["entries"] = len(payload.splitlines())
+                    item["sha256"] = hashlib.sha256(payload).hexdigest()
+            with self.assertRaisesRegex(release_plan.ReleasePlanError, "rule churn"):
+                release_plan.check_semantic_churn(candidate, previous, policy, after, before)
+
     def test_invalid_sha256_metadata_fails_closed(self):
         candidate = self.make_manifest()
         candidate["artifacts"][0]["sha256"] = "z" * 64
         with self.assertRaises(release_plan.ReleasePlanError):
             release_plan.create_plan(candidate, self.make_policy(), now=self.NOW)
+
+    def test_explicitly_approved_artifact_addition_is_allowed(self):
+        previous = self.make_manifest()
+        candidate = self.make_manifest()
+        candidate["artifacts"].append({
+            "path": "whitelist-candidate-gov.txt", "entries": 16,
+            "bytes": 280, "sha256": "a" * 64,
+        })
+        policy = self.make_policy()
+        policy["artifacts"]["whitelist-candidate-gov.txt"] = {
+            "min_entries": 10, "max_entries": 60,
+            "max_entry_change_fraction": 0.35,
+            "max_byte_change_fraction": 0.45,
+        }
+        policy["allowed_new_artifacts"] = ["whitelist-candidate-gov.txt"]
+        plan = release_plan.create_plan(candidate, policy, previous, now=self.NOW)
+        self.assertEqual(plan["changed_artifacts"], ["whitelist-candidate-gov.txt"])
+
+    def test_removal_is_blocked_even_with_approved_additions(self):
+        previous = self.make_manifest()
+        candidate = self.make_manifest()
+        candidate["artifacts"].pop()
+        policy = self.make_policy()
+        policy["artifacts"].pop("cidrs.txt")
+        policy["allowed_new_artifacts"] = ["cidrs.txt"]
+        with self.assertRaises(release_plan.ReleasePlanError):
+            release_plan.create_plan(candidate, policy, previous, now=self.NOW)
 
     def test_artifact_set_change_fails_closed(self):
         previous = self.make_manifest()

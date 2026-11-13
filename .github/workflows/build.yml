@@ -45,6 +45,11 @@ jobs:
       - name: Build deterministic datasets
         run: python src/build.py --sources resolved-sources.json --output dist
 
+      - name: Verify byte-for-byte rebuild from pinned inputs
+        run: |
+          python src/build.py --sources resolved-sources.json --output dist-rebuild
+          diff -r dist dist-rebuild
+
       - name: Verify checksums
         run: |
           cd dist
@@ -58,6 +63,15 @@ jobs:
           --repository "$GITHUB_REPOSITORY"
           --output previous/manifest.json
 
+      - name: Download previous release text assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f previous/manifest.json ]; then
+            tag="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq '.tagName')"
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern '*.txt' --dir previous
+          fi
+
       - name: Evaluate release policy
         id: release-plan
         run: |
@@ -65,6 +79,7 @@ jobs:
             --candidate dist/manifest.json \
             --policy release-policy.json \
             --previous previous/manifest.json \
+            --candidate-dir dist --previous-dir previous \
             --output release-plan.json
           python - <<'PY'
           import json
@@ -126,6 +141,15 @@ jobs:
           --repository "$GITHUB_REPOSITORY"
           --output previous/manifest.json
 
+      - name: Re-download previous release text assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f previous/manifest.json ]; then
+            tag="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq '.tagName')"
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern '*.txt' --dir previous
+          fi
+
       - name: Re-evaluate release policy
         id: final-plan
         run: |
@@ -133,6 +157,7 @@ jobs:
             --candidate candidate/dist/manifest.json \
             --policy release-policy.json \
             --previous previous/manifest.json \
+            --candidate-dir candidate/dist --previous-dir previous \
             --output release-plan-final.json
           python - <<'PY'
           import json
@@ -162,8 +187,7 @@ jobs:
           RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
         run: |
           gh release create "$RELEASE_TAG" \
-            candidate/dist/ru-domain-suffixes.txt \
-            candidate/dist/ru-ipv4-cidrs.txt \
+            candidate/dist/*.txt \
             candidate/dist/manifest.json \
             candidate/dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
@@ -182,11 +206,11 @@ jobs:
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir release-verify
           python - <<'PY'
           from pathlib import Path
-          expected = {
-              "SHA256SUMS",
-              "manifest.json",
-              "ru-domain-suffixes.txt",
-              "ru-ipv4-cidrs.txt",
+          import json
+          with open("candidate/dist/manifest.json", encoding="utf-8") as handle:
+              manifest = json.load(handle)
+          expected = {"SHA256SUMS", "manifest.json"} | {
+              entry["path"] for entry in manifest["artifacts"]
           }
           actual = {path.name for path in Path("release-verify").iterdir() if path.is_file()}
           if actual != expected:
