@@ -76,3 +76,18 @@ Security review этого write boundary: `docs/release-security-review.md`.
 В репозиторий запрещено добавлять secrets, private infrastructure, клиентские UUID/subscription paths, private VPN endpoints и любые другие данные конкретного оператора. Здесь также нет automatic production rollout в сторонние системы.
 
 Default branch должна быть защищена от direct/force pushes перед включением write-scoped release automation; рекомендуемая конфигурация описана в security review.
+
+## WHITELIST candidate categories (не операторский PASS)
+
+Дополнительно собираются **две отдельные категории-кандидата** из `vahellame/russia-whitelist-geosite`:
+
+- `whitelist-candidate-gov.txt` — `data/category-gov`, 16 исходных правил;
+- `whitelist-candidate-finance.txt` — `data/category-finance`, 34 исходных правила.
+
+Это **не** список гарантированно доступных доменов конкретной сети или оператора. В `manifest.json` эти sources имеют `verification.operator_access=unverified`. Результаты операторских измерений сюда не подмешиваются. Не использовать эти файлы как автоматические `direct` исключения в стандартном Auto.
+
+Формат — текстовые Xray domain rules: `full:example.ru` означает только точное имя, `domain:example.ru` — имя и поддомены. Builder удаляет дубликаты, нормализует IDNA, игнорирует upstream `@provider` annotations, отклоняет `include:`/`regexp:` и некорректный синтаксис. Пересечение между разными публикуемыми категориями останавливает сборку. Никакого расширения `full:` до suffix не происходит.
+
+Лицензия исходных curated categories — MIT (copyright 2026 vahellame), с сохранением attribution и exact license Git blob; подробности в `DATA_LICENSES.md`. Списки ROSCOMVPN используются только как oracle при сравнении: его общий `whitelist` включает сторонние источники с неподтверждёнными правами на дальнейшее переиздание. Vahellame GeoIP `trash` и `category-public-dns` намеренно исключены: они не являются адресами доступности для VPN.
+
+Переход с двух старых файлов на четыре является **явно разрешённым расширением** в `release-policy.json.allowed_new_artifacts`; произвольное добавление или удаление артефактов блокируется. Release не активирует никакую клиентскую или production routing policy. Для Flexus используется только ручной exact pin опубликованной версии с SHA-256, shadow-only comparison и отдельное подтверждение перед canary. Откат — возврат к прежнему pin.

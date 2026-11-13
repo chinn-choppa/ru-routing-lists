@@ -18,6 +18,25 @@ class NormalizeTests(unittest.TestCase):
         with self.assertRaises(builder.BuildError):
             builder.normalize_domain_suffixes("include:category-ru\n")
 
+    def test_domain_rules_preserve_exact_and_suffix_semantics(self):
+        raw = (
+            "full:WWW.Example.RU @ngenix\n"
+            "domain:example.ru # covers exact subdomain\n"
+            "full:service.ru @ddosguard\n"
+            "full:SERVICE.RU.\n"
+        )
+        self.assertEqual(builder.normalize_domain_rules(raw), [
+            "domain:example.ru", "full:service.ru"
+        ])
+
+    def test_domain_rules_reject_include_regex_and_bad_annotations(self):
+        for raw in (
+            "include:category-gov\n", "regexp:.*\\.ru\n",
+            "full:valid.ru prose\n", "full:bad..ru\n",
+        ):
+            with self.subTest(raw=raw), self.assertRaises(builder.BuildError):
+                builder.normalize_domain_rules(raw)
+
     def test_cidrs_are_validated_deduplicated_and_sorted(self):
         source = "2001:db8::/32\n10.0.0.0/8\n10.0.0.0/8 # duplicate\n192.0.2.0/24\n"
         self.assertEqual(
@@ -111,6 +130,30 @@ class BuildTests(unittest.TestCase):
         manifest = self.make_manifest(b"ru\n", b"192.0.2.0/24\n")
         manifest["sources"][0]["redistribution"]["allowed"] = "unknown"
         with self.assertRaises(builder.BuildError):
+            builder.validate_sources_manifest(manifest)
+
+    def test_cross_category_overlap_fails_without_replacing_output(self):
+        manifest = self.make_manifest(b"domain:example.ru\n", b"full:login.example.ru\n")
+        payloads = {}
+        for src, name, raw in zip(manifest["sources"], ["gov", "finance"], [
+            b"domain:example.ru\n", b"full:login.example.ru\n"
+        ]):
+            src["name"] = name
+            src["kind"] = "domain_rule"
+            src["verification"] = {"operator_access": "unverified"}
+            payloads[src["url"]] = raw
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "dist"
+            output.mkdir()
+            (output / "sentinel").write_text("keep", encoding="utf-8")
+            with self.assertRaisesRegex(builder.BuildError, "overlapping domain rules"):
+                builder.build(manifest, output, fetcher=payloads.__getitem__)
+            self.assertEqual((output / "sentinel").read_text(encoding="utf-8"), "keep")
+
+    def test_domain_rule_requires_unverified_operator_status(self):
+        manifest = self.make_manifest(b"domain:example.ru\n", b"192.0.2.0/24\n")
+        manifest["sources"][0]["kind"] = "domain_rule"
+        with self.assertRaisesRegex(builder.BuildError, "operator access"):
             builder.validate_sources_manifest(manifest)
 
     def test_blob_mismatch_fails_closed_without_replacing_previous_output(self):

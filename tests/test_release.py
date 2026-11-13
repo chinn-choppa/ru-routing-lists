@@ -245,6 +245,33 @@ class ReleasePlanTests(unittest.TestCase):
         with self.assertRaises(release_plan.ReleasePlanError):
             release_plan.create_plan(candidate, self.make_policy(), now=self.NOW)
 
+    def test_explicitly_approved_artifact_addition_is_allowed(self):
+        previous = self.make_manifest()
+        candidate = self.make_manifest()
+        candidate["artifacts"].append({
+            "path": "whitelist-candidate-gov.txt", "entries": 16,
+            "bytes": 280, "sha256": "a" * 64,
+        })
+        policy = self.make_policy()
+        policy["artifacts"]["whitelist-candidate-gov.txt"] = {
+            "min_entries": 10, "max_entries": 60,
+            "max_entry_change_fraction": 0.35,
+            "max_byte_change_fraction": 0.45,
+        }
+        policy["allowed_new_artifacts"] = ["whitelist-candidate-gov.txt"]
+        plan = release_plan.create_plan(candidate, policy, previous, now=self.NOW)
+        self.assertEqual(plan["changed_artifacts"], ["whitelist-candidate-gov.txt"])
+
+    def test_removal_is_blocked_even_with_approved_additions(self):
+        previous = self.make_manifest()
+        candidate = self.make_manifest()
+        candidate["artifacts"].pop()
+        policy = self.make_policy()
+        policy["artifacts"].pop("cidrs.txt")
+        policy["allowed_new_artifacts"] = ["cidrs.txt"]
+        with self.assertRaises(release_plan.ReleasePlanError):
+            release_plan.create_plan(candidate, policy, previous, now=self.NOW)
+
     def test_artifact_set_change_fails_closed(self):
         previous = self.make_manifest()
         candidate = self.make_manifest()
