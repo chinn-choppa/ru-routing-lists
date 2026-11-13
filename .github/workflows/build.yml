@@ -45,6 +45,11 @@ jobs:
       - name: Build deterministic datasets
         run: python src/build.py --sources resolved-sources.json --output dist
 
+      - name: Verify byte-for-byte rebuild from pinned inputs
+        run: |
+          python src/build.py --sources resolved-sources.json --output dist-rebuild
+          diff -r dist dist-rebuild
+
       - name: Verify checksums
         run: |
           cd dist
