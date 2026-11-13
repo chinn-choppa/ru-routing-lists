@@ -255,8 +255,8 @@ class ReleasePlanTests(unittest.TestCase):
             before.mkdir()
             after.mkdir()
             for name, old, new in [
-                ("domains.txt", b"a.ru\\nb.ru\\n", b"c.ru\\nd.ru\\n"),
-                ("cidrs.txt", b"192.0.2.0/24\\n", b"192.0.2.0/24\\n"),
+                ("domains.txt", b"a.ru\nb.ru\n", b"c.ru\nd.ru\n"),
+                ("cidrs.txt", b"192.0.2.0/24\n", b"192.0.2.0/24\n"),
             ]:
                 (before / name).write_bytes(old)
                 (after / name).write_bytes(new)
